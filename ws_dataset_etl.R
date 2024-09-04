@@ -476,7 +476,8 @@ ws_dataset <- lac %>%
   rename(country = country.name.en) %>% 
   
   # Dependent Variables
-  left_join(lac_expenditure %>% select(-country)) %>%
+  left_join(lac_expenditure %>% select(year, iso3c, cg_pcp_sexp, cg_prop_sexp, 
+                                       cg_prop_def, cg_gdp_sexp, -country)) %>%
   
   # Independent Variables
   left_join(cmd_trade %>% select(year, iso3c, all_cmd_pcp)) %>% 
@@ -485,20 +486,22 @@ ws_dataset <- lac %>%
   left_join(dpi %>% select(iso3c, year, system, maj)) %>% 
   
   # Political Economy
-  left_join(weo %>% select(-country)) %>%
+  left_join(weo %>% select(iso3c, year, gdp_pcp_ppp, inf_eop_g, unemp, 
+                           -country)) %>%
   left_join(cg_debt %>% select(-country)) %>% 
-  left_join(ecopen %>% select(-country)) %>% 
-  left_join(globalization %>% select(-country)) %>% 
-  left_join(res_depletion %>% select(year, iso3c, res_depletion)) %>%
+  #left_join(ecopen %>% select(-country)) %>% 
+  left_join(globalization %>% select(iso3c, year, kof_trade_df, kof_trade_dj,
+                                     -country)) %>% 
+  #left_join(res_depletion %>% select(year, iso3c, res_depletion)) %>%
   left_join(urban_pop %>% select(year, iso3c, urban_pop)) %>% 
   
   # Societal Covariates
   left_join(dp_ratio %>% select(year, iso3c, dp_ratio)) %>% 
   left_join(warfare %>% select(year, iso3c, 
-                               civviol, # Civil violence
-                               civwar, # Civil war
-                               ethviol, # Ethnic violence
-                               ethwar, # Ethnic war
+                               # civviol, # Civil violence
+                               # civwar, # Civil war
+                               # ethviol, # Ethnic violence
+                               # ethwar, # Ethnic war
                                civtot))
 
 ## 6.3 Hard Bind -----------------------------------------------------------
@@ -550,9 +553,7 @@ ws_dataset <- ws_dataset %>%
   mutate(year1 = year)
 
 vparty_sel <- vparty %>%
-  select(iso3c, country, year, pf_party_id, v2pariglef_ord, v2pawelf_ord, 
-         v2paclient_ord, v2pagroup_2, v2pagroup_3, v2palocoff_ord, 
-         v2paactcom_ord, v2pasoctie_ord, v2paind_ord) %>%
+  select(iso3c, country, year, pf_party_id, v2pariglef_ord) %>%
   mutate(year2 = year)
 
 ws_dataset <- ws_dataset %>%
