@@ -463,10 +463,17 @@ warfare %>%
 intersect(warfare$country, correct_names$country)
 
 ## 5.2 Dependency Ratio ---------------------------------------------------
-dp_ratio <- wb_etl(y = 'SP.POP.DPND', w = 1980, z = 2024) %>% 
-  rename(dp_ratio = 4)
+dp_ratio_old <- wb_etl(y = 'SP.POP.DPND.OL', w = 1980, z = 2024) %>% 
+  rename(dp_ratio_old = 4)
 
-dp_ratio %>% 
+dp_ratio_old %>% 
+  count(iso3c, year) %>% 
+  filter(n > 1)
+
+dp_ratio_yg <- wb_etl(y = 'SP.POP.DPND.YG', w = 1980, z = 2024) %>% 
+  rename(dp_ratio_yg = 4)
+
+dp_ratio_yg %>% 
   count(iso3c, year) %>% 
   filter(n > 1)
 
@@ -496,7 +503,8 @@ ws_dataset <- lac %>%
   left_join(urban_pop %>% select(year, iso3c, urban_pop)) %>% 
   
   # Societal Covariates
-  left_join(dp_ratio %>% select(year, iso3c, dp_ratio)) %>% 
+  left_join(dp_ratio_old %>% select(year, iso3c, dp_ratio_old)) %>% 
+  left_join(dp_ratio_yg %>% select(year, iso3c, dp_ratio_yg)) %>% 
   left_join(warfare %>% select(year, iso3c, 
                                # civviol, # Civil violence
                                # civwar, # Civil war
