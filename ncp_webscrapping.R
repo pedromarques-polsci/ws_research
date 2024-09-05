@@ -88,7 +88,27 @@ ncp_lpi <- ncp_lpi %>%
 
 ncp_all <- bind_rows(ncp_cct, ncp_lpi, ncp_sp)
 
+ncp_count <- ncp_all %>% 
+  complete(year = 1990:2024, country = unique(country)) %>% 
+  group_by(country) %>% 
+  fill(iso3c, .direction = "updown") %>% 
+  group_by(iso3c, year, ptype) %>%
+  dplyr::reframe(ncp_count=n(),
+                 country = unique(country)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = ptype, values_from = ncp_count) %>% 
+  select(-"NA") %>% 
+  rename(n_cct = cct, n_sp = sp, n_lpi = lpi) %>% 
+  mutate(n_cct = coalesce(n_cct, 0),
+         n_sp = coalesce(n_sp, 0),
+         n_lpi = coalesce(n_lpi, 0),
+         n_ncp = n_cct + n_sp + n_lpi)
+
 ## 1.4 Exporting data ---------------------------------------
 write_excel_csv2(ncp_all %>% 
                    filter(year %in% c(1900:2024)),
                  "final_data/ncp_programmes.csv", na = '')
+
+write_excel_csv2(ncp_all %>% 
+                   filter(year %in% c(1900:2024)),
+                 "final_data/ncp_count.csv", na = '')
