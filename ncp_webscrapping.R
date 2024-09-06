@@ -109,6 +109,6 @@ write_excel_csv2(ncp_all %>%
                    filter(year %in% c(1900:2024)),
                  "final_data/ncp_programmes.csv", na = '')
 
-write_excel_csv2(ncp_all %>% 
+write_excel_csv2(ncp_count %>% 
                    filter(year %in% c(1900:2024)),
                  "final_data/ncp_count.csv", na = '')

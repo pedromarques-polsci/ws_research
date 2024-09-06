@@ -479,12 +479,16 @@ dp_ratio_yg %>%
 
 # 6. DATA ENRICHMENT ---------------------------------------------------
 ## 6.1 Easy bind -----------------------------------------------------
+ncp_count <- read.csv2("final_data/ncp_count.csv")
+
 ws_dataset <- lac %>%
   rename(country = country.name.en) %>% 
   
   # Dependent Variables
   left_join(lac_expenditure %>% select(year, iso3c, cg_pcp_sexp, cg_prop_sexp, 
                                        cg_prop_def, cg_gdp_sexp, -country)) %>%
+  
+  left_join(ncp_count %>% select(-country), join_by(year, iso3c)) %>% 
   
   # Independent Variables
   left_join(cmd_trade %>% select(year, iso3c, all_cmd_pcp)) %>% 
@@ -513,22 +517,7 @@ ws_dataset <- lac %>%
                                civtot))
 
 ## 6.3 Hard Bind -----------------------------------------------------------
-### 6.3.1 Non-Contributory Policies ----------------------------------------
-ncp_all <- read.csv2("final_data/ncp_programmes.csv")
-
-ws_dataset <- ws_dataset %>% 
-  left_join(ncp_all %>% group_by(iso3c, year, ptype) %>%
-              dplyr::summarise(ncp_count=n()
-              ) %>% 
-              ungroup() %>% 
-              pivot_wider(names_from = ptype, values_from = ncp_count)) %>%  
-  rename(n_cct = cct, n_sp = sp, n_lpi = lpi) %>% 
-  mutate(n_cct = coalesce(n_cct, 0),
-         n_sp = coalesce(n_sp, 0),
-         n_lpi = coalesce(n_lpi, 0),
-         n_ncp = n_cct + n_sp + n_lpi)
-
-### 6.3.2 Elections --------------------------------------------------------
+### 6.3.1 Elections --------------------------------------------------------
 # Government party
 ws_dataset <- leadglob %>%
   mutate(year = as.double(year)) %>%
