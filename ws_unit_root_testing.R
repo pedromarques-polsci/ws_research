@@ -54,31 +54,37 @@ rare_visualizer <- function(data, var, varlabel){
 
 ws_dataset %>% 
 rare_visualizer(var = "n_ncp",
-                varlabel = "Non-Contributory Policy")
+                varlabel = "Adoção de Programas Sociais Não-Contributivos")
 
 ws_dataset %>% 
   rare_visualizer(var = "n_sp",
-                  varlabel = "Non-Contributory Social Pension")
+                  varlabel = "Adoção de Programas de Aposentadoria
+                  Não-Contributivos")
 
 ws_dataset %>% 
   rare_visualizer(var = "n_lpi",
-                  varlabel = "Non-Contributory Labour Programme")
+                  varlabel = "Adoção de Programas de Inclusão do Trabalho
+                  Não-Contributivos")
 
 ws_dataset %>% 
   rare_visualizer(var = "n_cct",
-                  varlabel = "Non-Contributory Cash Transfer Programme")
+                  varlabel = "Adoção de Programas de Transferência
+                  Condicionada de Renda")
 
 ws_dataset %>% 
   ws_visualizer(var = "v2pariglef_ord", 
                 varlabel = "Ideologia")
 
 ws_dataset %>%
-  filter(year %in% 1990:2019) %>% 
+  group_by(iso3c) %>% 
+  mutate(soma_valor = sum(civtot, na.rm = T)) %>% 
+  ungroup() %>% 
+  filter(year %in% 1990:2019, soma_valor > 0) %>% 
   filter(n() != sum(is.na(civtot)), .by = country) %>% 
   ggplot(aes(x = year, y = civtot)) + 
   facet_wrap(
     ~factor(country), ncol = 5, scales = "free_y") +
-  xlab("Ano") + ylab("Civil Violence") +
+  xlab("Ano") + ylab("Magnitude de Episódios de Violência Política") +
   geom_col()
 
 # Unit-Root Test ----------------------------------------------------------
@@ -114,7 +120,7 @@ purtest(d_cg_pcp_sexp ~ 1, data = pws_dataset, lags = "AIC",
 ### Social Spending (% Overall) ---------------------------------------------
 # Stationary at levels
 ws_dataset %>% 
-  ws_visualizer(var = "cg_prop_sexp", varlabel = "Proporção de Gastos Sociais")
+  ws_visualizer(var = "cg_prop_sexp", varlabel = "Gastos Sociais (% Gastos Públicos)")
 
 pws_dataset <- ws_dataset %>% 
   filter(!is.na(cg_prop_sexp),
@@ -158,7 +164,7 @@ purtest(d_cg_gdp_sexp ~ 1, data = pws_dataset, lags = "AIC",
 # Non-Stationary if I force 4 lags to all unities
 ws_dataset %>% 
   ws_visualizer(var = "all_cmd_pcp", 
-                varlabel = "Receita de Exportação de Commodities")
+                varlabel = "Receita de Exportação de Commodities per capita")
 
 pws_dataset <- ws_dataset %>% 
   filter(!is.na(all_cmd_pcp),
