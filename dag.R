@@ -11,8 +11,6 @@ theme_set(theme_dag())
 mydag <- function(data) {
   data %>% 
     tidy_dagitty() %>% 
-    mutate(linetype = ifelse(name %in% c("unitconfounder", "mob"), 
-                             "dashed", "solid")) %>%
     ggplot(aes(x = x, y = y, xend = xend, yend = yend)) + 
     geom_dag_point() + 
     geom_dag_edges() +
@@ -20,9 +18,7 @@ mydag <- function(data) {
     geom_dag_text()
 }
 
-## Naive GGDAG -----------------------------------------------------------
-
-### Naive 1: Simple DAG --------------------------------------------------
+## Naive DAG --------------------------------------------------
 ngg_label <- c(W = "Gasto Social",
            X = "Receita de Commodities",
            P = "Preços de Commodities")
@@ -38,106 +34,45 @@ ngg <- dagify(W ~ X,
 
 mydag(ngg)
 
-### Naive 2: Openness --------------------------------------------------
-ngg2_label <- c(W = "Gasto Social",
-                X = "Receita de Commodities",
-                P = "Preços de Commodities",
-                O = "Abertura Econômica")
-
-ngg2_coord <- list(
-  x = c(P = 1, X = 2, W = 3,
-        O = 2),
-  y = c(P = 0, X = 0, W = 0,
-        O = 1))
-
-ngg2 <- dagify(W ~ X,
-              X ~ P + O,
-              labels = ngg2_label,
-              coords = ngg2_coord)
-
-mydag(ngg2)
+ggsave('product/dag/ngg.jpeg', dpi = 300, height = 5, width = 10, 
+       unit = 'in', mydag(ngg))
 
 ## Confounder GGDAG --------------------------------------------------------
-
-### Openess Confounder -----------------------------------------------------
 zgg1_label <- c(W = "Gasto Social",
                 X = "Receita de Commodities",
                 P = "Preços de Commodities",
-                O = "Abertura Econômica")
+                O = "Abertura Econômica",
+                U = "Confusor Não-Observável",
+                Wt1 = "Gasto Social Anterior",
+                R = "Arrecadação",
+                H = "Humor Político")
 
 zgg1_coord <- list(
-  x = c(P = 1, X = 2, W = 3,
-        O = 2),
-  y = c(P = 0, X = 0, W = 0,
-        O = 1))
+  x = c(P = 1, X = 2, R = 3, W = 4,
+        O = 3, Wt1 = 4,
+        H = 3, U = 3),
+  y = c(P = 0, X = 0, R = 0.25, W = 0,
+        O = 1, Wt1 = 1,
+        H = -0.25, U = -1))
 
-zgg1 <- dagify(W ~ X + O,
-              X ~ P + O,
+zgg1 <- dagify(W ~ R + H + O + Wt1 + U,
+               R ~ X, H ~ X + R,
+               X ~ P + U,
               labels = zgg1_label,
               coords = zgg1_coord)
 
-mydag(zgg1)
-
-### Violence Confounder -----------------------------------------------------
-zgg1b_label <- c(W = "Gasto Social",
-                X = "Receita de Commodities",
-                P = "Preços de Commodities",
-                O = "Abertura Econômica",
-                V = "Violência Política",
-                Wt = "Gasto Social (t-2)")
-
-zgg1b_coord <- list(
-  x = c(P = 1, X = 2, W = 3,
-        O = 2, V = 2, Wt = 2),
-  y = c(P = 0, X = 0, W = 0,
-        O = 1, V = 2, Wt = 3))
-
-zgg1b <- dagify(W ~ X + V + Wt,
-               X ~ P + O,
-               O ~ V,
-               V ~ Wt,
-               labels = zgg2_label,
-               coords = zgg2_coord)
-
-zgg1b %>%
+zgg1 <- zgg1 %>%
   tidy_dagitty() %>% 
-  mutate(linetype = ifelse(name %in% c("unitconfounder", "mob"), 
-                           "dashed", "solid")) %>%
   ggplot(aes(x = x, y = y, xend = xend, yend = yend)) + 
   geom_dag_point() + 
   geom_dag_edges() +
   geom_dag_label_repel(aes(label = label)) +
   geom_dag_text(parse = TRUE, label = c(
-    "O","P", expression(V[t-1]), "W", expression(W[t-2]), "X"))
+    expression(H[t-1]),"O",expression(P[t-1]), expression(R[t-1]), "U","W", 
+    expression(W[t-1]), expression(X[t-1])
+    ))
 
-### Two Confounders --------------------------------------------------------
-zgg2_label <- c(W = "Gasto Social",
-                X = "Receita de Commodities",
-                P = "Preços de Commodities",
-                O = "Abertura Econômica",
-                V = "Violência Política",
-                Wt = "Gasto Social")
+zgg1
 
-zgg2_coord <- list(
-  x = c(P = 1, X = 2, W = 3,
-        O = 2, V = 2, Wt = 2),
-  y = c(P = 0, X = 0, W = 0,
-        O = 1, V = 2, Wt = 3))
-
-zgg2 <- dagify(W ~ X + O + V + Wt,
-               X ~ P + O,
-               O ~ V,
-               V ~ Wt,
-               labels = zgg2_label,
-               coords = zgg2_coord)
-
-zgg2 %>%
-  tidy_dagitty() %>% 
-  mutate(linetype = ifelse(name %in% c("unitconfounder", "mob"), 
-                           "dashed", "solid")) %>%
-  ggplot(aes(x = x, y = y, xend = xend, yend = yend)) + 
-  geom_dag_point() + 
-  geom_dag_edges() +
-  geom_dag_label_repel(aes(label = label)) +
-  geom_dag_text(parse = TRUE, label = c(
-    "O","P", expression(V[t-1]), "W", expression(W[t-2]), "X"))
+ggsave('product/dag/zgg1.jpeg', dpi = 300, height = 5, width = 10, 
+       unit = 'in', zgg1)
