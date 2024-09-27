@@ -5,9 +5,9 @@ if(require(plm) == F) install.packages('plm'); require(plm)
 if(require(rlang) == F) install.packages('rlang'); require(rlang)
 if(require(zoo) == F) install.packages('zoo'); require(zoo)
 
-ws_dataset <- readRDS("final_data/ws_dataset.RDS")
+dataset <- readRDS("final_data/ws_dataset.RDS")
 
-ws_dataset <- ws_dataset %>% 
+ws_dataset <- dataset %>% 
   group_by(iso3c) %>% 
   arrange(year) %>% 
   mutate(cg_pcp_sexp = na.approx(cg_pcp_sexp, na.rm=FALSE),
@@ -45,109 +45,12 @@ rare_visualizer <- function(data, var, varlabel){
     geom_col()
 }
 
-# UNIT ROOT TESTS / VISUALIZATION ------------------------------------------
-## Social Spending Per Capita ----------------------------------------------
-# Stationary at first difference
-ws_dataset %>% 
-  ws_visualizer(var = "cg_pcp_sexp", 
-                varlabel = "Gastos Sociais Per Capita")
-ws_dataset %>% 
-  ws_visualizer(var = "d_cg_pcp_sexp", 
-                varlabel = "Gastos Sociais Per Capita (Primeira Diferença)")
-
-myvar <- c("cg_pcp_sexp", "all_cmd_pcp", "kof_trade_df")
-
-ws_dataset_a <- ws_dataset %>% 
-  group_by(iso3c) %>% 
-  summarise(across(all_of(myvar), ~ mean(!is.na(.)))) %>%
-  filter(across(all_of(myvar), ~ . >= 0.7)) %>%
-  select(iso3c) %>%
-  inner_join(ws_dataset, by = "iso3c") %>% 
-  ungroup()
-
-pws_dataset <- ws_dataset_a %>% 
-  filter(!is.na(cg_pcp_sexp),
-         year %in% c(1990:2019)) %>% 
-  pdata.frame(index = c("country", "year"))
-
-purtest(pws_dataset$cg_pcp_sexp, data = pws_dataset, lags = "AIC", 
-        exo = "trend", test = "ips", pmax = 5)
-
-pws_dataset <- ws_dataset_a %>% 
-  filter(!is.na(d_cg_pcp_sexp),
-         year %in% c(1990:2019)) %>% 
-  pdata.frame(index = c("country", "year"))
-
-purtest(pws_dataset$d_cg_pcp_sexp, data = pws_dataset, lags = "AIC", 
-        exo = "trend", test = "ips", pmax = 6)
-
-## Social Spending (% Overall) ---------------------------------------------
-# Stationary at levels
-ws_dataset %>% 
-  ws_visualizer(var = "cg_prop_sexp", 
-                varlabel = "Gastos Sociais (% Gastos Públicos)")
-
-myvar <- c("cg_prop_sexp", "all_cmd_pcp", "kof_trade_df")
-
-ws_dataset_b <- ws_dataset %>% 
-  group_by(iso3c) %>% 
-  summarise(across(all_of(myvar), ~ mean(!is.na(.)))) %>%
-  filter(across(all_of(myvar), ~ . >= 0.7)) %>%
-  select(iso3c) %>%
-  inner_join(ws_dataset, by = "iso3c") %>% 
-  ungroup()
-
-pws_dataset <- ws_dataset_b %>% 
-  filter(!is.na(cg_prop_sexp),
-         year %in% c(1990:2019)) %>% 
-  pdata.frame(index = c("country", "year"))
-
-purtest(pws_dataset$cg_prop_sexp, data = pws_dataset, lags = "AIC", 
-        exo = "trend", test = "ips", pmax = 5)
-
-## Social Spending (%GDP) ------------------------------------------------
-# Stationary at first difference
-ws_dataset %>% 
-  ws_visualizer(var = "cg_gdp_sexp", 
-                varlabel = "Gastos Sociais (%PIB)")
-
-ws_dataset %>% 
-  ws_visualizer(var = "d_cg_gdp_sexp", 
-                varlabel = "Gastos Sociais (%PIB) (Primeira Diferença)")
-
-myvar <- c("cg_gdp_sexp", "all_cmd_pcp", "kof_trade_df")
-
-ws_dataset_c <- ws_dataset %>% 
-  group_by(iso3c) %>% 
-  summarise(across(all_of(myvar), ~ mean(!is.na(.)))) %>%
-  filter(across(all_of(myvar), ~ . >= 0.7)) %>%
-  select(iso3c) %>%
-  inner_join(ws_dataset, by = "iso3c") %>% 
-  ungroup()
-
-pws_dataset <- ws_dataset_c %>% 
-  filter(!is.na(cg_gdp_sexp),
-         year %in% c(1990:2019)) %>% 
-  pdata.frame(index = c("country", "year"))
-
-purtest(pws_dataset$cg_gdp_sexp, data = pws_dataset, lags = "AIC", 
-        exo = "trend", test = "ips", pmax = 6)
-
-pws_dataset <- ws_dataset_c %>% 
-  filter(!is.na(d_cg_gdp_sexp),
-         year %in% c(1990:2019)) %>% 
-  pdata.frame(index = c("country", "year"))
-
-purtest(pws_dataset$d_cg_gdp_sexp, data = pws_dataset, lags = "AIC", 
-        exo = "trend", test = "ips", pmax = 5)
-
-## Commodity Trade ---------------------------------------------------------
+# PLOTTING TIME SERIES ------------------------------------------------------
+## Commodity trade ----------------------------------------------------------
 ws_dataset %>% 
   ws_visualizer(var = "all_cmd_pcp", 
-                varlabel = "Receita de Exportação de Commodities per capita")
+                varlabel = "Receita de exportação de commodities")
 
-
-# PLOTTING TIME SERIES ------------------------------------------------------
 ## Defense expenditures (% Overall) ----------------------------------------
 ws_dataset %>% 
   ws_visualizer(var = "cg_prop_def", 
